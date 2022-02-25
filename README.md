@@ -1,4 +1,4 @@
-# github-action-qa-reviews
+# ![BYU logo](https://www.hscripts.com/freeimages/logos/university-logos/byu/byu-logo-clipart-128.gif) github-action-qa-reviews
 
 # QA Reviews Teams Notification
 
