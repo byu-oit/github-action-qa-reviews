@@ -35,54 +35,32 @@ runs:
         webhook_url: ${{ inputs.MS_TEAMS_WEBHOOK_URL }}
         raw: >-
           {
-            "@type": "MessageCard",
-            "@context": "https://schema.org/extensions",
-            "summary": "${{ job.status }}",
-            "themeColor": "${{ (job.status == 'success' && '4F7942') || 'FD3004' }}",
-            "title": "The ${{ github.action }} workflow on ${{github.repository}}/@${{ github.ref_name }} was ${{ (job.status == 'cancelled' && '') || 'a' }} ${{job.status}}",
-            "sections": [
-              {
-                "activityTitle": ${{ toJSON(env.NEW_MESSAGE) }},
-                "activitySubtitle": "${{ github.event.head_commit.timestamp}}",
-                "activityImage": "${{ (job.status == 'success' && 'https://raw.githubusercontent.com/Skitionek/notify-microsoft-teams/master/icons/success.png') || 'https://raw.githubusercontent.com/Skitionek/notify-microsoft-teams/master/icons/failure.png' }}",
-                "facts": [
-                  {
-                    "name": "Repository:",
-                    "value": "[${{github.repository}}](${{github.event.repository.html_url}})"
-                  },
-                  {
-                    "name": "Commit:",
-                    "value": "[${{ github.event.head_commit.id}}](${{ github.event.head_commit.url}})"
-                  },
-                  {
-                    "name": "Triggered by:",
-                    "value": "[ ${{ github.event.sender.login }} ](${{ github.event.sender.html_url }})"
-                  }
-                ]
-              }
-            ],
-            "potentialAction": [
-              {
-                "@type": "OpenUri",
-                "name": "View Actions",
-                "targets": [
-                  {
+              "@type": "MessageCard",
+              "@context": "http://schema.org/extensions",
+              "themeColor": "0076D7",
+              "summary": "${{ env.PR_TITLE }} is ready for testing",
+              "sections": [{
+                  "activityTitle": "${{ env.PR_TITLE }} is ready for testing",
+                  "facts": [{
+                    "name": "Pull Request Opened By",
+                    "value": "${{github.event.pull_request.user.login}}"
+                  },{
+                    "name": "Repository",
+                    "value": "${{github.event.pull_request.head.repo.full_name}}"
+                  },{
+                    "name": "Branch",
+                    "value": "${{github.event.pull_request.head.ref}}"
+                  }],
+                  "markdown": true
+              }],
+              "potentialAction": [{
+                  "@type": "OpenUri",
+                  "name": "Go to Pull Request",
+                  "targets": [{
                     "os": "default",
-                    "uri": "${{ github.event.repository.url }}/actions"
-                  }
-                ]
-              },
-              {
-                "@type": "OpenUri",
-                "name": "View Repo",
-                "targets": [
-                  {
-                    "os": "default",
-                    "uri": "${{ github.event.repository.url }}"
-                  }
-                ]
-              }
-            ]
+                    "uri": "${{ github.event.pull_request.html_url }}"
+                  }]
+              }]
           }
 
   
