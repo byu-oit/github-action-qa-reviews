@@ -1,0 +1,88 @@
+name: 'QATE Reviews Notification'
+description: 'Notify the QATE on a team that a pull request is ready for testing'
+inputs:
+  MS_TEAMS_WEBHOOK_URL: 
+    description: 'The URL for incoming webhooks on Microsoft Teams'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup ENV Variables
+      id: setup-env
+      run: |
+        import json
+        import re
+        import os
+        with open('${{ github.event_path }}') as fh:
+            event = json.load(fh)
+        # filter out any quote-reply content, i.e. lines that start with ">"
+        newComments = re.sub("^>.*$", "", event['review']['body'], 0, re.M)
+        qaMention = 1 if "QA_TEST" in newComments else 0
+        # JSON-escaped, but strip the start and end quote marks that json.dumps includes
+        escapedTitle = json.dumps(event['pull_request']['title'])[1:-1]
+        with open(os.environ['GITHUB_ENV'], 'a') as fh:
+            print(f'PR_TITLE={escapedTitle}', file=fh)
+            print(f'qa_mention={qaMention}', file=fh)
+      shell: python
+
+    - name: Cancel if no QA Mention
+      if: env.qa_mention != 1
+      uses: andymckay/cancel-action@0.2
+
+    - name: Microsoft Teams Notification
+      uses: skitionek/notify-microsoft-teams@master
+      if: env.qa_mention == 1
+      with:
+        webhook_url: ${{ inputs.MS_TEAMS_WEBHOOK_URL }}
+        raw: >-
+          {
+            "@type": "MessageCard",
+            "@context": "https://schema.org/extensions",
+            "summary": "${{ job.status }}",
+            "themeColor": "${{ (job.status == 'success' && '4F7942') || 'FD3004' }}",
+            "title": "The ${{ github.action }} workflow on ${{github.repository}}/@${{ github.ref_name }} was ${{ (job.status == 'cancelled' && '') || 'a' }} ${{job.status}}",
+            "sections": [
+              {
+                "activityTitle": ${{ toJSON(env.NEW_MESSAGE) }},
+                "activitySubtitle": "${{ github.event.head_commit.timestamp}}",
+                "activityImage": "${{ (job.status == 'success' && 'https://raw.githubusercontent.com/Skitionek/notify-microsoft-teams/master/icons/success.png') || 'https://raw.githubusercontent.com/Skitionek/notify-microsoft-teams/master/icons/failure.png' }}",
+                "facts": [
+                  {
+                    "name": "Repository:",
+                    "value": "[${{github.repository}}](${{github.event.repository.html_url}})"
+                  },
+                  {
+                    "name": "Commit:",
+                    "value": "[${{ github.event.head_commit.id}}](${{ github.event.head_commit.url}})"
+                  },
+                  {
+                    "name": "Triggered by:",
+                    "value": "[ ${{ github.event.sender.login }} ](${{ github.event.sender.html_url }})"
+                  }
+                ]
+              }
+            ],
+            "potentialAction": [
+              {
+                "@type": "OpenUri",
+                "name": "View Actions",
+                "targets": [
+                  {
+                    "os": "default",
+                    "uri": "${{ github.event.repository.url }}/actions"
+                  }
+                ]
+              },
+              {
+                "@type": "OpenUri",
+                "name": "View Repo",
+                "targets": [
+                  {
+                    "os": "default",
+                    "uri": "${{ github.event.repository.url }}"
+                  }
+                ]
+              }
+            ]
+          }
+
+  
