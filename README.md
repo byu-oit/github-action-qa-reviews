@@ -7,7 +7,7 @@ This Github Action sends a notification to Teams saying if a Pull Request Commen
 The notification would tell the user the following:
 - `Commit message here` is ready for testing
 - Who opened the Pull Request
-- What Repository the Pull Request
+- What Repository the Pull Request came from
 - What Branch the pull request came from
 - A link to the Pull Request
 
