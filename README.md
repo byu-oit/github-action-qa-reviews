@@ -14,6 +14,7 @@ The notification would tell the user the following:
 # Usage
 
 Checkout the "usage.yml" file to see exactly how you would use this action. In general, it looks like
+
 ```
     on:
         pull_request_review:
